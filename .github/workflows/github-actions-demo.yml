@@ -25,14 +25,20 @@ jobs:
       - name: Wait for containers to be ready
         run: sleep 10  # Optional: Wartezeit von 10 Sekunden, um sicherzustellen, dass die Container bereit sind
 
-      - name: Check Logs for Success Message
+      - name: Check Logs for assessment-container
         run: |
-          # Protokolliere die Logs des assessment-Containers
           echo "Logs from assessment-container:"
-          docker logs assessment-container | tee logs.txt
+          docker logs assessment-container | tee assessment_logs.txt  # Protokolliere die Logs in eine Datei
 
-          # Überprüfe, ob die gewünschte Erfolgsmeldung in den Logs vorhanden ist
-          if grep -q '"code":200,"message":"well done!"' logs.txt; then
+      - name: Check Logs for local-container
+        run: |
+          echo "Logs from local-container:"
+          docker logs local-container | tee local_logs.txt  # Protokolliere die Logs in eine Datei
+
+      - name: Verify success in logs
+        run: |
+          # Überprüfe, ob die Erfolgsmeldung in den assessment-Logs vorhanden ist
+          if grep -q '"code":200,"message":"well done!"' assessment_logs.txt; then
               echo "Erfolg: Die Nachricht 'well done!' wurde gefunden!"
           else
               echo "Fehler: Die Nachricht 'well done!' wurde nicht gefunden!"
@@ -48,9 +54,6 @@ jobs:
           docker stop assessment-container local-container
           docker rm assessment-container local-container
 
-
-
-      - name: Verify containers are running
         run: |
           docker ps
 
