@@ -1,7 +1,6 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is checking system against assessment image
 on: [push]
-
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
@@ -12,64 +11,49 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Install Docker Compose
+      - name: Pull and run given Docker image
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          docker pull mrksdh/assessment
+          docker run -d -p 8080:8080 --name assessment-container mrksdh/assessment
 
-      - name: Build and run using Docker Compose
+      - name: Build local Dockerfile and run container
         run: |
-          docker-compose up --build -d  # Im Hintergrund ausführen
+          docker build -t my-local-container -f Dockerfile .
+          docker run -d --name local-container --link assessment-container my-local-container
 
-      - name: Wait for assessment service to be ready
+      - name: Wait for containers to be ready
+        run: sleep 10  # Optional: Wartezeit von 10 Sekunden, um sicherzustellen, dass die Container bereit sind
+
+      - name: GET request to Assessment Service
+        id: get_data
         run: |
-          sleep 5  # Wartezeit, um sicherzustellen, dass der Service bereit ist
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" http://localhost:8080/v1/dataset)
+          echo "Response Code: $RESPONSE"
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "Fehler beim Abrufen der Daten!"
+            exit 1
+          fi
+          echo "Response data:"
+          cat response.json  # Optional: Ausgabe der Antwortdaten
 
-      - name: Get dataset from assessment service
+      - name: Prepare and send POST request
         run: |
-          DATASET=$(curl -s http://assessment:8080/v1/dataset)
-          echo "Dataset received: $DATASET"
+          # Extrahiere die erforderlichen Informationen aus der Antwort
+          CONSUMPTION_RESULT=$(jq '{result: [.events[] | {customerId: .customerId, consumption: (.timestamp - (.timestamp | if .eventType == "start" then 0 else 0 end)} )]} | group_by(.customerId) | map({customerId: .[0].customerId, consumption: map(.consumption) | add})' response.json)
 
-      - name: Send POST request to assessment container and display response
+          # Sende die POST-Anfrage
+          POST_RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
+          echo "Response from POST request: $POST_RESPONSE"
+
+      - name: Verify containers are running
         run: |
-          # Hier wird der Python-Code in einer Datei ausgeführt
-          echo "
-import requests
-import json
+          docker ps
 
-url = 'http://assessment:8080/v1/dataset'
-response = requests.get(url)
-responseAsJson = response.json()
-data = responseAsJson
-print(data)
-
-dictornaryForCalculation = {}
-dictornaryTotal = {}
-arr = []
-data['events'] = sorted(data['events'], key=lambda x: x['timestamp'])
-
-for i in data['events']:
-    customer = i['customerId']
-    workload = i['workloadId']
-    timestamp = i['timestamp']
-    eventType = i['eventType']
-    arr.append(customer)
-
-    if customer not in dictornaryForCalculation:
-        dictornaryForCalculation[customer] = {}
-
-    if eventType == 'start':
-        dictornaryForCalculation[customer][workload] = timestamp
-    elif eventType == 'stop':
-        if workload in dictornaryForCalculation[customer]:
-            start_time = dictornaryForCalculation[customer][workload]
-            runtime = timestamp - start_time
-            dictornaryTotal[customer] = dictornaryTotal.get(customer, 0) + runtime
-            del dictornaryForCalculation[customer][workload]
-
-result = []
-for customerId, consumption in dictornaryTotal.items():
-    result.append({'customerId': customerId, 'consumption': consumption})
+      - name: Cleanup
+        run: |
+          docker stop assessment-container local-container
+          docker rm assessment-container local-container
+d, 'consumption': consumption})
 
 resultDict = {'result': result}
 url = 'http://assessment:8080/v1/result'
