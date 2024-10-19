@@ -53,10 +53,4 @@ jobs:
           docker stop assessment-container local-container
           docker rm assessment-container local-container
 
-        run: |
-          docker ps
-
-      - name: Cleanup
-        run: |
-          docker stop assessment-container local-container
-          docker rm assessment-container local-container
+    
