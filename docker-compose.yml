@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  nils:
+    image: nils
+    build:
+      context: .
+      dockerfile: ./Dockerfile
