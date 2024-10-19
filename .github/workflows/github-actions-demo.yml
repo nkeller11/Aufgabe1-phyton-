@@ -15,7 +15,7 @@ jobs:
       - name: Pull and run given Docker image
         run: |
           docker pull mrksdh/assessment
-          docker run -d -p 8080:8080 --name assessment-container mrksdh/assessment
+          docker run -d -p 8080:8080 --name assessment mrksdh/assessment
 
       - name: Wait for assessment-container to be ready
         run: |
@@ -38,8 +38,8 @@ jobs:
 
       - name: Check Logs for assessment-container
         run: |
-          echo "Logs from assessment-container:"
-          docker logs assessment-container | tee assessment_logs.txt  # Protokolliere die Logs in eine Datei
+          echo "Logs from assessment:"
+          docker logs assessment | tee assessment_logs.txt  # Protokolliere die Logs in eine Datei
 
       - name: Check Logs for local-container
         run: |
