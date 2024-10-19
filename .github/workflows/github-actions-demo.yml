@@ -23,54 +23,46 @@ jobs:
           docker run -d --name local-container --link assessment-container my-local-container
 
       - name: Wait for containers to be ready
+        run: sleep 10  # Optional: Wait 10 seconds to ensure containers are ready
+
+      - name: Run Python Script
         run: |
-          for i in {1..10}; do 
-            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/dataset)
-            if [ "$RESPONSE" -eq 200 ]; then
-              echo "Service is up!"
-              break
-            fi
-            echo "Waiting for the service to be available..."
-            sleep 5
-          done
+          # Install requests if not in requirements.txt
+          pip install requests
 
-      - name: GET request to Assessment Service
-        id: get_data
+          # Create and execute the Python script
+          echo 'import requests
+import json
+import os
+
+url = "http://localhost:8080/v1/dataset"
+response = requests.get(url)
+responseAsJson = response.json()
+data = responseAsJson
+print(data)  # Output the response
+
+resultDict = {}
+resultDict["result"] = []
+
+# Process data and prepare result (your logic here)
+for event in data["events"]:
+    # Your processing logic to fill resultDict goes here
+
+# Convert resultDict to JSON and print it
+resultAsJson = json.dumps(resultDict)
+print(resultAsJson)' > script.py
+
+          python script.py  # Execute the script
+
+      - name: Verify containers are running
         run: |
-          RESPONSE=$(curl -s -o response.json -w "%{http_code}" http://localhost:8080/v1/dataset)
-          echo "Response Code: $RESPONSE"
-          if [ "$RESPONSE" -ne 200 ]; then
-            echo "Error fetching data!"
-            exit 1
-          fi
-          echo "Response data:"
-          cat response.json  # Optional: Output the response data
+          docker ps
 
-      - name: Output response.json for debugging
+      - name: Cleanup
         run: |
-          echo "Contents of response.json:"
-          cat response.json
-
-            - name: Prepare and send POST request
-          run: |
-          # Extract necessary information from the response
-          CONSUMPTION_RESULT=$(jq '
-            {result: [
-              .events[] | 
-              { 
-                customerId: .customerId, 
-                consumption: 
-                  if .eventType == "stop" then
-                    (.timestamp - (.events[] | select(.eventType == "start" and .workloadId == .workloadId).timestamp))
-                  else 
-                    0 
-                  end
-              }
-            ]} | group_by(.customerId) | map({customerId: .[0].customerId, consumption: map(.consumption) | add})
-          ' response.json)
-
-          # Send the POST request
-          POST_RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
+          docker stop assessment-container local-container
+          docker rm assessment-container local-container
+st:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
           echo "Response from POST request: $POST_RESPONSE"
 
 
