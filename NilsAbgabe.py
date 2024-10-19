@@ -3,8 +3,7 @@ import requests
 import json
 #this project assumes, that a workload Id is started and stopped exactly once
 
-url = "http://host.docker.internal:8080/v1/dataset"
-print("test")
+url = "http://assessment:8080/v1/dataset"
 response=requests.get(url)
 responseAsJson=response.json()
 data =responseAsJson
@@ -67,11 +66,10 @@ result_customer_ids = [entry['customerId'] for entry in result]
 missing_ids = set(list(set(arr))) - set(result_customer_ids)
 
 # Output the missing IDs
-print("Missing Customer IDs:", missing_ids)
 resultDict={}
 resultDict["result"]=result
 resultAsJson=json.dumps(resultDict)
-url= "http://host.docker.internal:8080/v1/result"
+url= "http://assessment:8080/v1/result"
 headers = {'Content-Type': 'application/json'}
 request=requests.post(url=url,json=resultDict,headers=headers)
 print("Response Text:", request.text)

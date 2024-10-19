@@ -1,8 +1,15 @@
 version: '3.4'
 
 services:
+  assessment:
+    image: mrksdh/assessment  # Hier wird Ihr Assessment-Image verwendet
+    ports:
+      - "8080:8080"  # Exponieren des Ports 8080
+
   nils:
-    image: nils
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile  # Ihr Dockerfile für den Nils-Dienst
+    depends_on:
+      - assessment  # Wartet, bis der Assessment-Dienst gestartet ist
+
