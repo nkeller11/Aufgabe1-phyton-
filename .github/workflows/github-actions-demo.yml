@@ -23,17 +23,59 @@ jobs:
 
       - name: Wait for assessment service to be ready
         run: |
-          sleep 5  # Optional: Wartezeit einfügen
+          sleep 5  # Wartezeit, um sicherzustellen, dass der Service bereit ist
 
-      - name: Check logs for assessment service
+      - name: Get dataset from assessment service
         run: |
-          docker-compose logs assessment
+          DATASET=$(curl -s http://assessment:8080/v1/dataset)
+          echo "Dataset received: $DATASET"
 
       - name: Send POST request to assessment container and display response
         run: |
-          RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d '{"key": "value"}')
-          echo "Response from POST request: $RESPONSE"
+          # Hier wird der Python-Code in einer Datei ausgeführt
+          echo "
+import requests
+import json
 
-      - name: Verify containers are running
-        run: |
-          docker ps
+url = 'http://assessment:8080/v1/dataset'
+response = requests.get(url)
+responseAsJson = response.json()
+data = responseAsJson
+print(data)
+
+dictornaryForCalculation = {}
+dictornaryTotal = {}
+arr = []
+data['events'] = sorted(data['events'], key=lambda x: x['timestamp'])
+
+for i in data['events']:
+    customer = i['customerId']
+    workload = i['workloadId']
+    timestamp = i['timestamp']
+    eventType = i['eventType']
+    arr.append(customer)
+
+    if customer not in dictornaryForCalculation:
+        dictornaryForCalculation[customer] = {}
+
+    if eventType == 'start':
+        dictornaryForCalculation[customer][workload] = timestamp
+    elif eventType == 'stop':
+        if workload in dictornaryForCalculation[customer]:
+            start_time = dictornaryForCalculation[customer][workload]
+            runtime = timestamp - start_time
+            dictornaryTotal[customer] = dictornaryTotal.get(customer, 0) + runtime
+            del dictornaryForCalculation[customer][workload]
+
+result = []
+for customerId, consumption in dictornaryTotal.items():
+    result.append({'customerId': customerId, 'consumption': consumption})
+
+resultDict = {'result': result}
+url = 'http://assessment:8080/v1/result'
+headers = {'Content-Type': 'application/json'}
+request = requests.post(url=url, json=resultDict, headers=headers)
+print('Response Text:', request.text)
+" > script.py
+
+          python3 script.py  # Ausführen des Python-Skripts
