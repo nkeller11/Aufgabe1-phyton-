@@ -23,36 +23,21 @@ jobs:
           docker run -d --name local-container --link assessment-container my-local-container
 
       - name: Wait for containers to be ready
-        run: sleep 10  # Optional: Wait 10 seconds to ensure containers are ready
+        run: sleep 10  # Optional: Wartezeit von 10 Sekunden, um sicherzustellen, dass die Container bereit sind
 
-      - name: Run Python Script
+      - name: Check Logs for Success Message
         run: |
-          # Install requests if not in requirements.txt
-          pip install requests
+          # Protokolliere die Logs des assessment-Containers
+          echo "Logs from assessment-container:"
+          docker logs assessment-container | tee logs.txt
 
-          # Create and execute the Python script
-          echo 'import requests
-import json
-import os
-
-url = "http://localhost:8080/v1/dataset"
-response = requests.get(url)
-responseAsJson = response.json()
-data = responseAsJson
-print(data)  # Output the response
-
-resultDict = {}
-resultDict["result"] = []
-
-# Process data and prepare result (your logic here)
-for event in data["events"]:
-    # Your processing logic to fill resultDict goes here
-
-# Convert resultDict to JSON and print it
-resultAsJson = json.dumps(resultDict)
-print(resultAsJson)' > script.py
-
-          python script.py  # Execute the script
+          # Überprüfe, ob die gewünschte Erfolgsmeldung in den Logs vorhanden ist
+          if grep -q '"code":200,"message":"well done!"' logs.txt; then
+              echo "Erfolg: Die Nachricht 'well done!' wurde gefunden!"
+          else
+              echo "Fehler: Die Nachricht 'well done!' wurde nicht gefunden!"
+              exit 1
+          fi
 
       - name: Verify containers are running
         run: |
@@ -62,8 +47,7 @@ print(resultAsJson)' > script.py
         run: |
           docker stop assessment-container local-container
           docker rm assessment-container local-container
-st:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
-          echo "Response from POST request: $POST_RESPONSE"
+
 
 
       - name: Verify containers are running
