@@ -17,6 +17,17 @@ jobs:
           docker pull mrksdh/assessment
           docker run -d -p 8080:8080 --name assessment-container mrksdh/assessment
 
+      - name: Wait for assessment-container to be ready
+        run: |
+          for i in {1..10}; do
+            if curl -s http://localhost:8080/v1/dataset; then
+              echo "Assessment container is ready!"
+              break
+            fi
+            echo "Waiting for assessment container..."
+            sleep 3
+          done
+
       - name: Build local Dockerfile and run container
         run: |
           docker build -t my-local-container -f Dockerfile .
@@ -52,5 +63,3 @@ jobs:
         run: |
           docker stop assessment-container local-container
           docker rm assessment-container local-container
-
-    
