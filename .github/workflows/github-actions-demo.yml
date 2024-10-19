@@ -51,20 +51,28 @@ jobs:
           echo "Contents of response.json:"
           cat response.json
 
-      - name: Prepare and send POST request
-        run: |
+            - name: Prepare and send POST request
+          run: |
           # Extract necessary information from the response
           CONSUMPTION_RESULT=$(jq '
             {result: [
               .events[] | 
-              {customerId: .customerId, 
-               consumption: if .eventType == "stop" then (.timestamp - (.events[] | select(.eventType == "start" and .workloadId == .workloadId).timestamp)) else 0 end}
+              { 
+                customerId: .customerId, 
+                consumption: 
+                  if .eventType == "stop" then
+                    (.timestamp - (.events[] | select(.eventType == "start" and .workloadId == .workloadId).timestamp))
+                  else 
+                    0 
+                  end
+              }
             ]} | group_by(.customerId) | map({customerId: .[0].customerId, consumption: map(.consumption) | add})
           ' response.json)
 
           # Send the POST request
           POST_RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
           echo "Response from POST request: $POST_RESPONSE"
+
 
       - name: Verify containers are running
         run: |
