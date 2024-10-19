@@ -23,7 +23,16 @@ jobs:
           docker run -d --name local-container --link assessment-container my-local-container
 
       - name: Wait for containers to be ready
-        run: sleep 10  # Optional: Wait time of 10 seconds to ensure the containers are ready
+        run: |
+          for i in {1..10}; do 
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/dataset)
+            if [ "$RESPONSE" -eq 200 ]; then
+              echo "Service is up!"
+              break
+            fi
+            echo "Waiting for the service to be available..."
+            sleep 5
+          done
 
       - name: GET request to Assessment Service
         id: get_data
