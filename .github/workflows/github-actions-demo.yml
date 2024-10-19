@@ -31,7 +31,7 @@ jobs:
       - name: Build local Dockerfile and run container
         run: |
           docker build -t my-local-container -f Dockerfile .
-          docker run -d --name local-container --link assessment-container my-local-container
+          docker run -d --name local-container --link assessment my-local-container
 
       - name: Wait for containers to be ready
         run: sleep 10  # Optional: Wartezeit von 10 Sekunden, um sicherzustellen, dass die Container bereit sind
