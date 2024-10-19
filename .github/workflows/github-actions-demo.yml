@@ -25,14 +25,14 @@ jobs:
         run: |
           sleep 5  # Optional: Wartezeit einfügen
 
+      - name: Check logs for assessment service
+        run: |
+          docker-compose logs assessment
+
       - name: Send POST request to assessment container and display response
         run: |
           RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d '{"key": "value"}')
           echo "Response from POST request: $RESPONSE"
-
-      - name: Check logs for assessment container
-        run: |
-          docker-compose logs assessment
 
       - name: Verify containers are running
         run: |
