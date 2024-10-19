@@ -1,0 +1,27 @@
+name: main
+run-name: ${{ github.actor }} is checking system against assessment image
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+
+      - name: Pull and run given Docker image
+        run: |
+          docker pull mrksdh/assessment
+          docker run  -d -p 8080:8080 --name assessment-container mrksdh/assessment
+
+      - name: Build local Dockerfile and run container
+        run: |
+          docker build -t my-local-container -f Dockerfile .
+          docker run -d --name local-container --link assessment-container my-local-container
+
+      - name: Verify containers are running
+        run: |
+          docker ps
