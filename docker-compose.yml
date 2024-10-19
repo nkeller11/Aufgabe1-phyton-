@@ -10,6 +10,6 @@ services:
     build:
       context: .  # Der aktuelle Kontext für den Build
       dockerfile: Dockerfile  # Dein Dockerfile für den Nils-Dienst
+    image: nils:latest  # Füge hier einen gültigen Tag hinzu
     depends_on:
       - assessment  # Wartet, bis der Assessment-Dienst gestartet ist
-
