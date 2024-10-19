@@ -46,8 +46,7 @@ jobs:
           fi
 
       - name: Verify containers are running
-        run: |
-          docker ps
+        run: docker ps
 
       - name: Cleanup
         run: |
