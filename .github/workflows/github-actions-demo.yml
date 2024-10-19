@@ -49,7 +49,7 @@ jobs:
       - name: Verify success in logs
         run: |
           # Überprüfe, ob die Erfolgsmeldung in den assessment-Logs vorhanden ist
-          if grep -q '"code":200,"message":"well done!"' assessment_logs.txt; then
+          if grep -q '"code":200,"message":"well done!"' local_logs.txt; then
               echo "Erfolg: Die Nachricht 'well done!' wurde gefunden!"
           else
               echo "Fehler: Die Nachricht 'well done!' wurde nicht gefunden!"
