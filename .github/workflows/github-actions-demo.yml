@@ -23,7 +23,7 @@ jobs:
           docker run -d --name local-container --link assessment-container my-local-container
 
       - name: Wait for containers to be ready
-        run: sleep 10  # Optional: Wartezeit von 10 Sekunden, um sicherzustellen, dass die Container bereit sind
+        run: sleep 10  # Optional: Wait for 10 seconds to ensure containers are ready
 
       - name: GET request to Assessment Service
         id: get_data
@@ -31,18 +31,18 @@ jobs:
           RESPONSE=$(curl -s -o response.json -w "%{http_code}" http://localhost:8080/v1/dataset)
           echo "Response Code: $RESPONSE"
           if [ "$RESPONSE" -ne 200 ]; then
-            echo "Fehler beim Abrufen der Daten!"
+            echo "Error fetching data!"
             exit 1
           fi
           echo "Response data:"
-          cat response.json  # Optional: Ausgabe der Antwortdaten
+          cat response.json  # Optional: Output the response data
 
       - name: Prepare and send POST request
         run: |
-          # Extrahiere die erforderlichen Informationen aus der Antwort
-          CONSUMPTION_RESULT=$(jq '{result: [.events[] | {customerId: .customerId, consumption: (.timestamp - (.timestamp | if .eventType == "start" then 0 else 0 end)} )]} | group_by(.customerId) | map({customerId: .[0].customerId, consumption: map(.consumption) | add})' response.json)
+          # Extract necessary information from the response
+          CONSUMPTION_RESULT=$(jq '{result: [.events[] | {customerId: .customerId, consumption: (.timestamp | if .eventType == "start" then 0 else 0 end)}]} | group_by(.customerId) | map({customerId: .[0].customerId, consumption: map(.consumption) | add})' response.json)
 
-          # Sende die POST-Anfrage
+          # Send the POST request
           POST_RESPONSE=$(curl -X POST http://localhost:8080/v1/result -H "Content-Type: application/json" -d "$CONSUMPTION_RESULT")
           echo "Response from POST request: $POST_RESPONSE"
 
@@ -54,8 +54,3 @@ jobs:
         run: |
           docker stop assessment-container local-container
           docker rm assessment-container local-container
- json=resultDict, headers=headers)
-print('Response Text:', request.text)
-" > script.py
-
-          python3 script.py  # Ausführen des Python-Skripts
