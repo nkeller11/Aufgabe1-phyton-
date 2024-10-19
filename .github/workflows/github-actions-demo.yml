@@ -50,9 +50,9 @@ jobs:
         run: |
           # Überprüfe, ob die Erfolgsmeldung in den assessment-Logs vorhanden ist
           if grep -q '"code":200,"message":"well done!"' local_logs.txt; then
-              echo "Erfolg: Die Nachricht 'well done!' wurde gefunden!"
+              echo "Erfolg: Die Nachricht '200,well done!' wurde gefunden!"
           else
-              echo "Fehler: Die Nachricht 'well done!' wurde nicht gefunden!"
+              echo "Fehler: Die Nachricht '200,well done!' wurde nicht gefunden!"
               exit 1
           fi
 
@@ -61,5 +61,5 @@ jobs:
 
       - name: Cleanup
         run: |
-          docker stop assessment-container local-container
-          docker rm assessment-container local-container
+          docker stop assessment local-container
+          docker rm assessment local-container
