@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.8'
 
 services:
   assessment:
@@ -8,8 +8,8 @@ services:
 
   nils:
     build:
-      context: .
-      dockerfile: ./Dockerfile  # Ihr Dockerfile für den Nils-Dienst
+      context: .  # Der aktuelle Kontext für den Build
+      dockerfile: Dockerfile  # Dein Dockerfile für den Nils-Dienst
     depends_on:
       - assessment  # Wartet, bis der Assessment-Dienst gestartet ist
 
