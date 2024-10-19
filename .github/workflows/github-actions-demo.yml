@@ -1,6 +1,7 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is checking system against assessment image
 on: [push]
+
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
@@ -11,16 +12,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-
-      - name: Pull and run given Docker image
+      - name: Install Docker Compose
         run: |
-          docker pull mrksdh/assessment
-          docker run  -d -p 8080:8080 --name assessment-container mrksdh/assessment
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-      - name: Build local Dockerfile and run container
+      - name: Build and run using Docker Compose
         run: |
-          docker build -t my-local-container -f Dockerfile .
-          docker run -d --name local-container --link assessment-container my-local-container
+          docker-compose up --build -d  # Im Hintergrund ausführen
+
+      - name: Send POST request to assessment container and display response
+        run: |
+          RESPONSE=$(curl -X POST http://assessment:8080/v1/result -H "Content-Type: application/json" -d '{"key": "value"}')
+          echo "Response from POST request: $RESPONSE"
 
       - name: Verify containers are running
         run: |
