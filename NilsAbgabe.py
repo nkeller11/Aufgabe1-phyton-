@@ -1,7 +1,6 @@
 
 import requests
 import json
-#this project assumes, that a workload Id is started and stopped exactly once
 
 url = "http://assessment:8080/v1/dataset"
 response=requests.get(url)
@@ -62,10 +61,10 @@ print(len(result))
 # Extracting the customer IDs from the result
 result_customer_ids = [entry['customerId'] for entry in result]
 
-# Finding missing IDs
+# Finding missing IDs(in because i didnt know the data have to be ordered first)
 missing_ids = set(list(set(arr))) - set(result_customer_ids)
 
-# Output the missing IDs
+
 resultDict={}
 resultDict["result"]=result
 resultAsJson=json.dumps(resultDict)
